@@ -1,0 +1,38 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+dataset = pd.read_csv('loan_approval_dataset_1000.csv')
+X = dataset.iloc[:, :-1].values
+y = dataset.iloc[:, -1].values
+print(X)
+print(y)
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [0,1,2,3,4,10])], remainder='passthrough')
+X = np.array(ct.fit_transform(X))
+print(X)
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 42)
+from sklearn.ensemble import RandomForestRegressor
+regressor = RandomForestRegressor(n_estimators = 1000, random_state = 42)
+regressor.fit(X, y)
+new_applicant = pd.DataFrame({
+    'Gender': ['Female'],
+    'Married': ['Yes'],
+    'Dependents': ['1'],
+    'Education': ['Graduate'],
+    'Self_Employed': ['No'],
+    'ApplicantIncome': [3117],
+    'CoapplicantIncome': [1478],
+    'LoanAmount': [120],
+    'Loan_Amount_Term': [240],
+    'Credit_History': [0],
+    'Property_Area': ['Urban']
+})
+new_applicant_transformed = ct.transform(new_applicant.values).astype(float)
+prediction = regressor.predict(new_applicant_transformed)
+
+if prediction[0] >= 0.5:
+    print("✅ Loan Approved")
+else:
+    print("❌ Loan Rejected")
